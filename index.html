@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+  </head>
+
+  <body>
+
+    <div id="diagram">
+      <svg width="1200" height="400"></svg>
+    </div>
+
+    <div>
+      <label for="nodeColor">Node Color:</label>
+      <input type="color" id="nodeColor" />
+      <button id="addNode">Add Node</button>
+    </div>
+
+    <div>
+      <label for="arrowStyle">Arrow Style:</label>
+
+      <select id="arrowStyle">
+        <option value="rightsingle">Right Single Arrow</option>
+        <option value="leftsingle">Left Single Arrow</option>
+        <option value="rightstroke">Right Dotted Arrow</option>
+        <option value="leftstroke">Left Dotted Arrow</option>
+      </select>
+      
+      <button id="addArrow">Add Arrow</button>
+    </div>
+
+    <div>
+      <label for="text">Text:</label>
+      <input type="text" id="text" />
+    </div>
+
+    <div>
+        <button id="saveSVG">Save as SVG</button>
+    </div>
+
+    <svg width="0" height="0" style="position: absolute;">
+
+      <marker
+        id="arrowhead-rightsingle"
+        markerWidth="10"
+        markerHeight="10"
+        refX="8"
+        refY="5"
+        orient="auto"
+      >
+        <path d="M0,0 L10,5 L0,10 Z" fill="#000000" />
+      </marker>
+
+      <marker
+        id="arrowhead-leftsingle"
+        markerWidth="20"
+        markerHeight="10"
+        refX="100"
+        refY="5"
+        orient="auto"
+      >
+        <path d="M10,0 L0,5 L10,10 Z" fill="#000000" />
+      </marker>
+
+    </svg>
+
+    <script>
+
+      let nodeColor = '#000000';
+      let arrowStyle = 'rightsingle';
+      let arrowCount = 0;
+      let lastNodePosition = { x: 0, y: 0 };
+      let lastArrowPosition = { x1: 0, y1: 0, x2: 0, y2: 0 };
+
+      function addNode() {
+        const svg = d3.select('#diagram').select('svg');
+        const x = lastArrowPosition.x2 + 25;
+        const y = 200;
+
+        const text = document.getElementById('text').value;
+
+        svg
+          .append('circle')
+          .attr('r', 22) 
+          .attr('fill', 'none')
+          .attr('stroke', 'black')
+          .attr('stroke-width', 2) 
+          .attr('cx', x)
+          .attr('cy', y)
+          .attr('class', 'outline');
+
+        svg
+          .append('circle')
+          .attr('r', 20)
+          .attr('fill', nodeColor)
+          .attr('cx', x)
+          .attr('cy', y)
+          .attr('class', 'node');
+
+        svg
+          .append('text')
+          .attr('x', x)
+          .attr('y', y - 30) 
+          .attr('text-anchor', 'middle')
+          .text(text); 
+
+        lastNodePosition = { x, y };
+      }
+
+      function addArrow() {
+        const svg = d3.select('#diagram').select('svg');
+        arrowCount++;
+        const x1 = lastNodePosition.x + 20;
+        const y1 = lastNodePosition.y;
+        const x2 = x1 + 100;
+        const y2 = y1;
+
+        const text = document.getElementById('text').value;
+
+        const line = svg
+          .append('line')
+          .attr('x1', x1)
+          .attr('y1', y1)
+          .attr('x2', x2)
+          .attr('y2', y2)
+          .attr('stroke', nodeColor)
+          .attr('class', 'arrow');
+        
+        if (arrowStyle === 'rightstroke' || arrowStyle === 'leftstroke') {
+            line.attr('stroke-dasharray', '5,2'); 
+        }
+
+        if (arrowStyle === 'rightsingle' || arrowStyle === 'rightstroke') {
+          line.attr('marker-end', 'url(#arrowhead-rightsingle)');
+        } else if (arrowStyle === 'leftsingle' || arrowStyle === 'leftstroke') {
+          line.attr('marker-end', 'url(#arrowhead-leftsingle)');
+        }
+
+        svg
+          .append('text')
+          .attr('x', (x1 + x2) / 2)
+          .attr('y', y1 - 10) 
+          .attr('text-anchor', 'middle')
+          .text(text);
+
+        lastArrowPosition = { x1, y1, x2, y2 };
+      }
+
+      function saveDiagramAsSVG() {
+        const svgString = new XMLSerializer().serializeToString(document.querySelector('#diagram svg').cloneNode(true));
+        const blob = new Blob([svgString], { type: 'image/svg+xml' });
+        const url = URL.createObjectURL(blob);
+
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'diagram.svg';
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+
+      document.getElementById('addNode').addEventListener('click', function () {
+        nodeColor = document.getElementById('nodeColor').value;
+        addNode();
+      });
+
+      document.getElementById('addArrow').addEventListener('click', function () {
+        arrowStyle = document.getElementById('arrowStyle').value;
+        addArrow();
+      });
+
+      document.getElementById('saveSVG').addEventListener('click', function () {
+        saveDiagramAsSVG();
+      });
+
+    </script>
+
+  </body>
+
+</html>
